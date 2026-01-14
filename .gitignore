@@ -1,0 +1,123 @@
+reference/
+
+# ===================
+# Build Outputs
+# ===================
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.pdb
+*.ilk
+*.exp
+*.idb
+
+# Example project binaries (keep data folder structure)
+**/bin/*
+!**/bin/data/
+**/bin/data/*
+!**/bin/data/.gitkeep
+
+# ===================
+# Visual Studio
+# ===================
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sdf
+*.opensdf
+*.ncb
+*.aps
+*.cachefile
+ipch/
+*.VC.db
+*.VC.VC.opendb
+Debug/
+Release/
+x64/
+x86/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+[Bb]uild/
+bld/
+[Bb]in/
+[Oo]bj/
+*.log
+*.tlog
+
+# ===================
+# Xcode (macOS)
+# ===================
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcscheme
+*.xcscmblueprint
+DerivedData/
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# ===================
+# Linux / Make
+# ===================
+*.d
+Makefile.local
+
+# ===================
+# OS Generated
+# ===================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.swo
+
+# ===================
+# IDE / Editor
+# ===================
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vscode/
+*.code-workspace
+
+# ===================
+# openFrameworks Specific
+# ===================
+*.qbs.user
+openFrameworks-Info.plist
+Project.xcconfig
+
+# Local addon overrides
+addon_config.local.mk
+
+# ===================
+# Reference SDK
+# ===================
+# Uncomment if you don't want to track the full OpenVR SDK
+# reference/
+
+# ===================
+# Misc
+# ===================
+*.bak
+*.backup
+*.tmp
+*.temp
+*.orig
