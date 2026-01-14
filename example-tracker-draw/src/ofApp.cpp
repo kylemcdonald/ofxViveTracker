@@ -150,3 +150,10 @@ void ofApp::updateTitle() {
 	title += "] (1=TL 2=TR 3=BL C=clear Esc=quit)";
 	ofSetWindowTitle(title);
 }
+
+void ofApp::windowResized(int w, int h) {
+	if (w <= 0 || h <= 0) return;
+
+	canvas.allocate(w, h, GL_RGBA);
+	clearCanvas();
+}
