@@ -5,6 +5,9 @@ ofxViveTracker::ofxViveTracker()
 	, trackerIndex(vr::k_unTrackedDeviceIndexInvalid)
 	, connected(false)
 	, tracking(false)
+	, autoReconnect(true)
+	, reconnectInterval(2.0f)
+	, lastReconnectAttempt(-10.0f)
 	, position(0.0f)
 	, orientation(1.0f, 0.0f, 0.0f, 0.0f)
 	, matrix(1.0f)
@@ -17,16 +20,26 @@ ofxViveTracker::~ofxViveTracker() {
 }
 
 bool ofxViveTracker::setup() {
+	lastReconnectAttempt = ofGetElapsedTimef();
+	return tryConnect();
+}
+
+bool ofxViveTracker::tryConnect() {
+	if (vrSystem) {
+		vr::VR_Shutdown();
+		vrSystem = nullptr;
+	}
+	connected = false;
+
 	vr::EVRInitError err = vr::VRInitError_None;
 	vrSystem = vr::VR_Init(&err, vr::VRApplication_Background);
 
 	if (err != vr::VRInitError_None || !vrSystem) {
-		ofLogError("ofxViveTracker") << "VR_Init failed: " << vr::VR_GetVRInitErrorAsEnglishDescription(err);
+		vrSystem = nullptr;
 		return false;
 	}
 
 	if (!findTracker()) {
-		ofLogError("ofxViveTracker") << "No GenericTracker found in SteamVR";
 		vr::VR_Shutdown();
 		vrSystem = nullptr;
 		return false;
@@ -38,7 +51,41 @@ bool ofxViveTracker::setup() {
 }
 
 void ofxViveTracker::update() {
-	if (!connected || !vrSystem) {
+	float now = ofGetElapsedTimef();
+
+	// Case 1: Not connected to SteamVR at all
+	if (!vrSystem) {
+		if (autoReconnect && (now - lastReconnectAttempt) >= reconnectInterval) {
+			lastReconnectAttempt = now;
+			tryConnect();
+		}
+		tracking = false;
+		return;
+	}
+
+	// Poll for VR events to detect SteamVR shutdown
+	vr::VREvent_t event;
+	while (vrSystem->PollNextEvent(&event, sizeof(event))) {
+		if (event.eventType == vr::VREvent_Quit) {
+			ofLogNotice("ofxViveTracker") << "SteamVR is shutting down";
+			vr::VR_Shutdown();
+			vrSystem = nullptr;
+			connected = false;
+			tracking = false;
+			trackerIndex = vr::k_unTrackedDeviceIndexInvalid;
+			return;
+		}
+	}
+
+	// Case 2: Connected to SteamVR but no tracker found
+	if (!connected) {
+		if (autoReconnect && (now - lastReconnectAttempt) >= reconnectInterval) {
+			lastReconnectAttempt = now;
+			if (findTracker()) {
+				connected = true;
+				ofLogNotice("ofxViveTracker") << "Reconnected to tracker at index " << trackerIndex;
+			}
+		}
 		tracking = false;
 		return;
 	}
@@ -84,6 +131,14 @@ glm::vec3 ofxViveTracker::getAngularVelocity() const {
 	return angularVelocity;
 }
 
+void ofxViveTracker::setAutoReconnect(bool enable) {
+	autoReconnect = enable;
+}
+
+void ofxViveTracker::setReconnectInterval(float seconds) {
+	reconnectInterval = seconds;
+}
+
 bool ofxViveTracker::findTracker() {
 	for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
 		if (!vrSystem->IsTrackedDeviceConnected(i)) continue;
@@ -100,6 +155,16 @@ void ofxViveTracker::updatePose() {
 	vrSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, 0.0f, poses, vr::k_unMaxTrackedDeviceCount);
 
 	const vr::TrackedDevicePose_t& p = poses[trackerIndex];
+
+	// Check if device disconnected
+	if (!p.bDeviceIsConnected) {
+		ofLogWarning("ofxViveTracker") << "Tracker disconnected";
+		connected = false;
+		tracking = false;
+		trackerIndex = vr::k_unTrackedDeviceIndexInvalid;
+		return;
+	}
+
 	tracking = p.bPoseIsValid;
 
 	if (!tracking) {

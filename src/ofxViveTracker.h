@@ -15,6 +15,9 @@ public:
 	bool isConnected() const;
 	bool isTracking() const;
 
+	void setAutoReconnect(bool enable);
+	void setReconnectInterval(float seconds);
+
 	glm::vec3 getPosition() const;
 	glm::quat getOrientation() const;
 	glm::mat4 getMatrix() const;
@@ -29,6 +32,9 @@ private:
 
 	bool connected;
 	bool tracking;
+	bool autoReconnect;
+	float reconnectInterval;
+	float lastReconnectAttempt;
 
 	glm::vec3 position;
 	glm::quat orientation;
@@ -37,6 +43,7 @@ private:
 	glm::vec3 angularVelocity;
 
 	bool findTracker();
+	bool tryConnect();
 	void updatePose();
 	glm::mat4 convertMatrix(const vr::HmdMatrix34_t& mat);
 	glm::quat matrixToQuat(const glm::mat4& mat);
