@@ -64,6 +64,16 @@ void ofApp::draw() {
 	if (tracker.isTracking()) {
 		glm::vec3 pos = tracker.getPosition();
 		ofDrawBitmapString("Position: " + ofToString(pos.x, 3) + ", " + ofToString(pos.y, 3) + ", " + ofToString(pos.z, 3), 20, 50);
+
+		glm::quat q = tracker.getOrientation();
+		glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+		ofDrawBitmapString("Orientation: " + ofToString(euler.x, 1) + ", " + ofToString(euler.y, 1) + ", " + ofToString(euler.z, 1), 20, 70);
+
+		glm::vec3 vel = tracker.getVelocity();
+		ofDrawBitmapString("Velocity: " + ofToString(vel.x, 3) + ", " + ofToString(vel.y, 3) + ", " + ofToString(vel.z, 3), 20, 90);
+
+		glm::vec3 angVel = tracker.getAngularVelocity();
+		ofDrawBitmapString("Angular Vel: " + ofToString(angVel.x, 2) + ", " + ofToString(angVel.y, 2) + ", " + ofToString(angVel.z, 2), 20, 110);
 	}
 }
 
