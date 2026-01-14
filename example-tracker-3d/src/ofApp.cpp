@@ -10,6 +10,7 @@ void ofApp::setup() {
 	cam.setDistance(4.0f);
 	cam.setNearClip(0.01f);
 	cam.setFarClip(100.0f);
+	cam.setTarget(glm::vec3(0, -1.0f, 0)); // Orbit around center of box
 
 	if (!tracker.setup()) {
 		ofLogError() << "Failed to connect to Vive Tracker";
@@ -55,30 +56,31 @@ void ofApp::draw() {
 }
 
 void ofApp::drawBaseStation() {
-	// Small black cube at origin representing base station
+	// Small black cube at origin representing base station (mounted at ceiling, y=0)
 	ofSetColor(0);
 	ofDrawBox(0, 0, 0, 0.05f, 0.05f, 0.05f);
 }
 
 void ofApp::drawTrackingVolume() {
-	// Draw 2x2x2m wireframe cube centered at origin
+	// Draw 2x2x2m wireframe cube - y=0 at ceiling, y=-2 at floor
 	ofSetColor(100);
 	ofNoFill();
-	ofDrawBox(0, 1.0f, 0, 2.0f, 2.0f, 2.0f);
+	ofDrawBox(0, -1.0f, 0, 2.0f, 2.0f, 2.0f);
 	ofFill();
 
-	// Draw ground grid
+	// Draw ground grid at floor level (y = -2)
 	ofSetColor(60);
 	float gridSize = 2.0f;
 	float gridStep = 0.25f;
+	float floorY = -2.0f;
 	for (float x = -gridSize / 2; x <= gridSize / 2; x += gridStep) {
-		ofDrawLine(x, 0, -gridSize / 2, x, 0, gridSize / 2);
+		ofDrawLine(x, floorY, -gridSize / 2, x, floorY, gridSize / 2);
 	}
 	for (float z = -gridSize / 2; z <= gridSize / 2; z += gridStep) {
-		ofDrawLine(-gridSize / 2, 0, z, gridSize / 2, 0, z);
+		ofDrawLine(-gridSize / 2, floorY, z, gridSize / 2, floorY, z);
 	}
 
-	// Draw axis lines at origin
+	// Draw axis lines at origin (ceiling where base station is)
 	ofSetLineWidth(2);
 	ofSetColor(255, 0, 0);
 	ofDrawLine(0, 0, 0, 0.3f, 0, 0); // X - red
