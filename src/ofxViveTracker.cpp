@@ -2,6 +2,7 @@
 
 #ifdef USE_LIBSURVIVE
 #include <survive_api.h>
+#include <thread>
 #endif
 
 ofxViveTracker::ofxViveTracker()
@@ -182,8 +183,17 @@ void ofxViveTracker::update() {
 void ofxViveTracker::close() {
 #ifdef USE_LIBSURVIVE
 	if (surviveCtx) {
-		survive_simple_close(surviveCtx);
+		// Store context and clear immediately to prevent further use
+		SurviveSimpleContext* ctx = surviveCtx;
 		surviveCtx = nullptr;
+		trackerObject = nullptr;
+		trackerName.clear();
+
+		// Run close in detached thread to avoid blocking app exit
+		// (survive_simple_close can hang waiting for USB I/O)
+		std::thread([ctx]() {
+			survive_simple_close(ctx);
+		}).detach();
 	}
 	trackerObject = nullptr;
 	trackerName.clear();
