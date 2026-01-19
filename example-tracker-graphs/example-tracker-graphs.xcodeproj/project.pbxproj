@@ -291,7 +291,7 @@
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_DEBUG)",
 					"-lsurvive",
-					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx"
+					"-Wl,-rpath,@executable_path/../../../../../libs/libsurvive/lib/osx"
 				]
 			},
 			"isa": "XCBuildConfiguration",
@@ -322,7 +322,7 @@
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_RELEASE)",
 					"-lsurvive",
-					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx"
+					"-Wl,-rpath,@executable_path/../../../../../libs/libsurvive/lib/osx"
 				],
 				"baseConfigurationReference": "E4EB6923138AFD0F00A09F29"
 			},

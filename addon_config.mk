@@ -14,4 +14,4 @@ vs:
 osx:
 	ADDON_INCLUDES += libs/libsurvive/include
 	ADDON_LIBS += libs/libsurvive/lib/osx/libsurvive.dylib
-	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx
+	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../../../libs/libsurvive/lib/osx
