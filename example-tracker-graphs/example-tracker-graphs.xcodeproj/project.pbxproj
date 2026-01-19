@@ -279,22 +279,19 @@
 					"../libs",
 					"../libs/openvr",
 					"../libs/openvr/include",
-					"../src",
-					"../libsurvive/include/libsurvive",
-					"../libsurvive/redist",
-					"../libsurvive/libs/cnmatrix/include",
-					"../libsurvive/libs/cnkalman/include"
+					"../libs/libsurvive/include",
+					"../src"
 				],
 				"LIBRARY_SEARCH_PATHS": [
 					"$(inherited)",
-					"../libsurvive/bin"
+					"../libs/libsurvive/lib/osx"
 				],
 				"OTHER_LDFLAGS": [
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_DEBUG)",
 					"-lsurvive",
-					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libsurvive/bin"
+					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx"
 				]
 			},
 			"isa": "XCBuildConfiguration",
@@ -313,22 +310,19 @@
 					"../libs",
 					"../libs/openvr",
 					"../libs/openvr/include",
-					"../src",
-					"../libsurvive/include/libsurvive",
-					"../libsurvive/redist",
-					"../libsurvive/libs/cnmatrix/include",
-					"../libsurvive/libs/cnkalman/include"
+					"../libs/libsurvive/include",
+					"../src"
 				],
 				"LIBRARY_SEARCH_PATHS": [
 					"$(inherited)",
-					"../libsurvive/bin"
+					"../libs/libsurvive/lib/osx"
 				],
 				"OTHER_LDFLAGS": [
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_RELEASE)",
 					"-lsurvive",
-					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libsurvive/bin"
+					"-Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx"
 				],
 				"baseConfigurationReference": "E4EB6923138AFD0F00A09F29"
 			},

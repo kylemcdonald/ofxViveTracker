@@ -75,10 +75,10 @@ LIB_FMOD=""
 GCC_PREPROCESSOR_DEFINITIONS=$(inherited) $(USER_PREPROCESSOR_DEFINITIONS)
 
 // libsurvive library paths for ofxViveTracker
-LIBSURVIVE_PATH = $(OF_PATH)/addons/ofxViveTracker/libsurvive
-LIBSURVIVE_HEADERS = $(LIBSURVIVE_PATH)/include/libsurvive $(LIBSURVIVE_PATH)/redist $(LIBSURVIVE_PATH)/libs/cnmatrix/include $(LIBSURVIVE_PATH)/libs/cnkalman/include
-LIBSURVIVE_LIBS = -L$(LIBSURVIVE_PATH)/bin -lsurvive
-LIBSURVIVE_RPATH = -Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libsurvive/bin
+LIBSURVIVE_PATH = $(OF_PATH)/addons/ofxViveTracker/libs/libsurvive
+LIBSURVIVE_HEADERS = $(LIBSURVIVE_PATH)/include
+LIBSURVIVE_LIBS = -L$(LIBSURVIVE_PATH)/lib/osx -lsurvive
+LIBSURVIVE_RPATH = -Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx
 
 OTHER_CFLAGS = $(OF_CORE_CFLAGS)
 OTHER_LDFLAGS = $(OF_CORE_LIBS) $(OF_CORE_FRAMEWORKS) $(LIBSURVIVE_LIBS) $(LIBSURVIVE_RPATH)

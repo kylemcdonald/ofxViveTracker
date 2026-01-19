@@ -12,9 +12,6 @@ vs:
 	ADDON_LIBS += libs/openvr/lib/win64/openvr_api.lib
 
 osx:
-	ADDON_INCLUDES += libsurvive/include/libsurvive
-	ADDON_INCLUDES += libsurvive/redist
-	ADDON_INCLUDES += libsurvive/libs/cnmatrix/include
-	ADDON_INCLUDES += libsurvive/libs/cnkalman/include
-	ADDON_LIBS += libsurvive/bin/libsurvive.dylib
-	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libsurvive/bin
+	ADDON_INCLUDES += libs/libsurvive/include
+	ADDON_LIBS += libs/libsurvive/lib/osx/libsurvive.dylib
+	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../addons/ofxViveTracker/libs/libsurvive/lib/osx
