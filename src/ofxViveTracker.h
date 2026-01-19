@@ -2,8 +2,16 @@
 
 #include "ofMain.h"
 
-// Use libsurvive on macOS, OpenVR on Windows
-#if defined(__APPLE__)
+// Backend selection:
+// - macOS: Always uses libsurvive
+// - Windows: Default is OpenVR. Define OFX_VIVE_USE_LIBSURVIVE to use libsurvive instead.
+//
+// To use libsurvive on Windows:
+// 1. Add OFX_VIVE_USE_LIBSURVIVE to your project's preprocessor definitions
+// 2. Link against survive.lib instead of openvr_api.lib
+// 3. Copy libsurvive.dll and plugins/ folder to your bin/ directory
+
+#if defined(__APPLE__) || defined(OFX_VIVE_USE_LIBSURVIVE)
 #define USE_LIBSURVIVE
 #endif
 
