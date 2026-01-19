@@ -1,8 +1,17 @@
 #include "ofxViveTracker.h"
 
+#ifdef USE_LIBSURVIVE
+#include <survive_api.h>
+#endif
+
 ofxViveTracker::ofxViveTracker()
+#ifdef USE_LIBSURVIVE
+	: surviveCtx(nullptr)
+	, trackerObject(nullptr)
+#else
 	: vrSystem(nullptr)
 	, trackerIndex(vr::k_unTrackedDeviceIndexInvalid)
+#endif
 	, connected(false)
 	, tracking(false)
 	, autoReconnect(true)
@@ -25,6 +34,43 @@ bool ofxViveTracker::setup() {
 }
 
 bool ofxViveTracker::tryConnect() {
+#ifdef USE_LIBSURVIVE
+	if (surviveCtx) {
+		survive_simple_close(surviveCtx);
+		surviveCtx = nullptr;
+	}
+	connected = false;
+	trackerObject = nullptr;
+	trackerName.clear();
+
+	// Initialize libsurvive with no arguments
+	char* argv[] = { (char*)"ofxViveTracker", nullptr };
+	surviveCtx = survive_simple_init(1, argv);
+
+	if (!surviveCtx) {
+		ofLogError("ofxViveTracker") << "Failed to initialize libsurvive";
+		return false;
+	}
+
+	// Start the background tracking thread
+	survive_simple_start_thread(surviveCtx);
+
+	// Wait a moment for devices to be discovered
+	float startTime = ofGetElapsedTimef();
+	while (ofGetElapsedTimef() - startTime < 2.0f) {
+		if (findTracker()) {
+			connected = true;
+			ofLogNotice("ofxViveTracker") << "Connected to tracker: " << trackerName;
+			return true;
+		}
+		ofSleepMillis(100);
+	}
+
+	// No tracker found yet, but context is valid - can still poll
+	ofLogWarning("ofxViveTracker") << "No tracker found during initial scan, will keep looking...";
+	return false;
+
+#else
 	if (vrSystem) {
 		vr::VR_Shutdown();
 		vrSystem = nullptr;
@@ -48,11 +94,50 @@ bool ofxViveTracker::tryConnect() {
 	connected = true;
 	ofLogNotice("ofxViveTracker") << "Connected to tracker at index " << trackerIndex;
 	return true;
+#endif
 }
 
 void ofxViveTracker::update() {
 	float now = ofGetElapsedTimef();
 
+#ifdef USE_LIBSURVIVE
+	if (!surviveCtx) {
+		if (autoReconnect && (now - lastReconnectAttempt) >= reconnectInterval) {
+			lastReconnectAttempt = now;
+			tryConnect();
+		}
+		tracking = false;
+		return;
+	}
+
+	// Check if libsurvive is still running
+	if (!survive_simple_is_running(surviveCtx)) {
+		ofLogNotice("ofxViveTracker") << "libsurvive stopped running";
+		survive_simple_close(surviveCtx);
+		surviveCtx = nullptr;
+		connected = false;
+		tracking = false;
+		trackerObject = nullptr;
+		trackerName.clear();
+		return;
+	}
+
+	// Try to find a tracker if we don't have one
+	if (!connected || !trackerObject) {
+		if (autoReconnect && (now - lastReconnectAttempt) >= reconnectInterval) {
+			lastReconnectAttempt = now;
+			if (findTracker()) {
+				connected = true;
+				ofLogNotice("ofxViveTracker") << "Found tracker: " << trackerName;
+			}
+		}
+		tracking = false;
+		return;
+	}
+
+	updatePose();
+
+#else
 	// Case 1: Not connected to SteamVR at all
 	if (!vrSystem) {
 		if (autoReconnect && (now - lastReconnectAttempt) >= reconnectInterval) {
@@ -91,16 +176,26 @@ void ofxViveTracker::update() {
 	}
 
 	updatePose();
+#endif
 }
 
 void ofxViveTracker::close() {
+#ifdef USE_LIBSURVIVE
+	if (surviveCtx) {
+		survive_simple_close(surviveCtx);
+		surviveCtx = nullptr;
+	}
+	trackerObject = nullptr;
+	trackerName.clear();
+#else
 	if (vrSystem) {
 		vr::VR_Shutdown();
 		vrSystem = nullptr;
 	}
+	trackerIndex = vr::k_unTrackedDeviceIndexInvalid;
+#endif
 	connected = false;
 	tracking = false;
-	trackerIndex = vr::k_unTrackedDeviceIndexInvalid;
 }
 
 bool ofxViveTracker::isConnected() const {
@@ -131,6 +226,14 @@ glm::vec3 ofxViveTracker::getAngularVelocity() const {
 	return angularVelocity;
 }
 
+std::string ofxViveTracker::getTrackerName() const {
+#ifdef USE_LIBSURVIVE
+	return trackerName;
+#else
+	return "";
+#endif
+}
+
 void ofxViveTracker::setAutoReconnect(bool enable) {
 	autoReconnect = enable;
 }
@@ -140,6 +243,30 @@ void ofxViveTracker::setReconnectInterval(float seconds) {
 }
 
 bool ofxViveTracker::findTracker() {
+#ifdef USE_LIBSURVIVE
+	if (!surviveCtx) return false;
+
+	// Iterate through all objects to find a tracker
+	for (const SurviveSimpleObject* obj = survive_simple_get_first_object(surviveCtx);
+		 obj != nullptr;
+		 obj = survive_simple_get_next_object(surviveCtx, obj)) {
+
+		SurviveSimpleObject_type type = survive_simple_object_get_type(obj);
+		SurviveSimpleSubobject_type subtype = survive_simple_object_get_subtype(obj);
+
+		// Look for tracker devices
+		if (type == SurviveSimpleObject_OBJECT) {
+			if (subtype == SURVIVE_OBJECT_SUBTYPE_TRACKER ||
+				subtype == SURVIVE_OBJECT_SUBTYPE_TRACKER_GEN2) {
+				trackerObject = obj;
+				trackerName = survive_simple_object_name(obj);
+				return true;
+			}
+		}
+	}
+	return false;
+
+#else
 	for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
 		if (!vrSystem->IsTrackedDeviceConnected(i)) continue;
 		if (vrSystem->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_GenericTracker) {
@@ -148,9 +275,55 @@ bool ofxViveTracker::findTracker() {
 		}
 	}
 	return false;
+#endif
 }
 
 void ofxViveTracker::updatePose() {
+#ifdef USE_LIBSURVIVE
+	if (!surviveCtx || !trackerObject) {
+		tracking = false;
+		return;
+	}
+
+	SurvivePose pose;
+	FLT timecode = survive_simple_object_get_latest_pose(trackerObject, &pose);
+
+	// Check if we have a valid pose (timecode > 0 means we got data)
+	if (timecode <= 0) {
+		tracking = false;
+		return;
+	}
+
+	tracking = true;
+
+	// Extract position (libsurvive uses meters)
+	position.x = pose.Pos[0];
+	position.y = pose.Pos[1];
+	position.z = pose.Pos[2];
+
+	// Extract orientation (libsurvive quaternion is WXYZ)
+	orientation.w = pose.Rot[0];
+	orientation.x = pose.Rot[1];
+	orientation.y = pose.Rot[2];
+	orientation.z = pose.Rot[3];
+
+	// Build transformation matrix
+	matrix = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
+
+	// Get velocity
+	SurviveVelocity vel;
+	survive_simple_object_get_latest_velocity(trackerObject, &vel);
+
+	velocity.x = vel.Pos[0];
+	velocity.y = vel.Pos[1];
+	velocity.z = vel.Pos[2];
+
+	// Angular velocity is in axis-angle format (radians/sec around each axis)
+	angularVelocity.x = vel.AxisAngleRot[0];
+	angularVelocity.y = vel.AxisAngleRot[1];
+	angularVelocity.z = vel.AxisAngleRot[2];
+
+#else
 	vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
 	vrSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, 0.0f, poses, vr::k_unMaxTrackedDeviceCount);
 
@@ -186,8 +359,10 @@ void ofxViveTracker::updatePose() {
 	angularVelocity.x = p.vAngularVelocity.v[0];
 	angularVelocity.y = p.vAngularVelocity.v[1];
 	angularVelocity.z = p.vAngularVelocity.v[2];
+#endif
 }
 
+#ifndef USE_LIBSURVIVE
 glm::mat4 ofxViveTracker::convertMatrix(const vr::HmdMatrix34_t& mat) {
 	return glm::mat4(
 		mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0f,
@@ -200,3 +375,4 @@ glm::mat4 ofxViveTracker::convertMatrix(const vr::HmdMatrix34_t& mat) {
 glm::quat ofxViveTracker::matrixToQuat(const glm::mat4& mat) {
 	return glm::quat_cast(mat);
 }
+#endif
