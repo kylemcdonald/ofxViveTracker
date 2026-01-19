@@ -307,15 +307,17 @@ void ofxViveTracker::updatePose() {
 	tracking = true;
 
 	// Extract position (libsurvive uses meters)
+	// Swap Y and Z axes, negate Z to match expected coordinate system
 	position.x = pose.Pos[0];
-	position.y = pose.Pos[1];
-	position.z = pose.Pos[2];
+	position.y = pose.Pos[2];
+	position.z = -pose.Pos[1];
 
 	// Extract orientation (libsurvive quaternion is WXYZ)
+	// Swap Y and Z, negate Z to match position coordinate transform
 	orientation.w = pose.Rot[0];
 	orientation.x = pose.Rot[1];
-	orientation.y = pose.Rot[2];
-	orientation.z = pose.Rot[3];
+	orientation.y = pose.Rot[3];
+	orientation.z = -pose.Rot[2];
 
 	// Build transformation matrix
 	matrix = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
@@ -324,14 +326,16 @@ void ofxViveTracker::updatePose() {
 	SurviveVelocity vel;
 	survive_simple_object_get_latest_velocity(trackerObject, &vel);
 
+	// Swap Y and Z, negate Z for velocity
 	velocity.x = vel.Pos[0];
-	velocity.y = vel.Pos[1];
-	velocity.z = vel.Pos[2];
+	velocity.y = vel.Pos[2];
+	velocity.z = -vel.Pos[1];
 
 	// Angular velocity is in axis-angle format (radians/sec around each axis)
+	// Swap Y and Z, negate Z to match position coordinate transform
 	angularVelocity.x = vel.AxisAngleRot[0];
-	angularVelocity.y = vel.AxisAngleRot[1];
-	angularVelocity.z = vel.AxisAngleRot[2];
+	angularVelocity.y = vel.AxisAngleRot[2];
+	angularVelocity.z = -vel.AxisAngleRot[1];
 
 #else
 	vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
