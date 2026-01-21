@@ -20,4 +20,20 @@ vs:
 osx:
 	ADDON_INCLUDES += libs/libsurvive/include
 	ADDON_LIBS += libs/libsurvive/lib/osx/libsurvive.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/poser_barycentric_svd.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_global_scene_solver.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_simulator.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_dummy.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/poser_mpfit.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_udp.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/poser_dummy.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/poser_kalman_only.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_vive.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/disambiguator_statebased.dylib
+	ADDON_LIBS += libs/libsurvive/lib/osx/plugins/driver_playback.dylib
+	# rpath for example projects inside addon folder (5 levels up from MacOS/)
 	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../../../libs/libsurvive/lib/osx
+	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../../../libs/libsurvive/lib/osx/plugins
+	# rpath for standard apps/category/project/ structure (7 levels up to OF root)
+	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../../../../../addons/ofxViveTracker/libs/libsurvive/lib/osx
+	ADDON_LDFLAGS += -Wl,-rpath,@executable_path/../../../../../../../addons/ofxViveTracker/libs/libsurvive/lib/osx/plugins
