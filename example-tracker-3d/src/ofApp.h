@@ -18,6 +18,8 @@ private:
 	std::deque<glm::vec3> trail;
 	static const int maxTrailPoints = 100;
 
+	glm::vec3 positionOffset{0.0f};  // Offset to center tracker in visualization
+
 	void drawBaseStation();
 	void drawTrackingVolume();
 	void drawTracker();

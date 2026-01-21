@@ -16,14 +16,14 @@ void ofApp::setup() {
 		ofLogError() << "Failed to connect to Vive Tracker";
 	}
 
-	ofSetWindowTitle("Tracker 3D [F=fullscreen C=clear trail Esc=quit]");
+	ofSetWindowTitle("Tracker 3D [F=fullscreen C=clear trail R=reset position Esc=quit]");
 }
 
 void ofApp::update() {
 	tracker.update();
 
 	if (tracker.isTracking()) {
-		glm::vec3 pos = tracker.getPosition();
+		glm::vec3 pos = tracker.getPosition() - positionOffset;
 		trail.push_back(pos);
 		while (trail.size() > maxTrailPoints) {
 			trail.pop_front();
@@ -49,7 +49,7 @@ void ofApp::draw() {
 	ofDrawBitmapString(status, 20, 30);
 
 	if (tracker.isTracking()) {
-		glm::vec3 pos = tracker.getPosition();
+		glm::vec3 pos = tracker.getPosition() - positionOffset;
 		ofDrawBitmapString("Position: " + ofToString(pos.x, 3) + ", " + ofToString(pos.y, 3) + ", " + ofToString(pos.z, 3), 20, 50);
 	}
 	ofEnableDepthTest();
@@ -94,17 +94,18 @@ void ofApp::drawTrackingVolume() {
 void ofApp::drawTracker() {
 	if (!tracker.isTracking()) return;
 
-	glm::vec3 pos = tracker.getPosition();
-	glm::mat4 mat = tracker.getMatrix();
+	glm::vec3 pos = tracker.getPosition() - positionOffset;
+	glm::quat orient = tracker.getOrientation();
 
 	ofPushMatrix();
 
-	// Apply position and orientation
-	ofMultMatrix(mat);
+	// Apply offset position and orientation
+	ofTranslate(pos);
+	ofMultMatrix(glm::mat4_cast(orient));
 
-	// Draw tracker as flattened cube (80x80x40mm) - Y is the short axis
+	// Draw tracker as flattened cube (80x80x40mm) - Z (blue) is the short axis
 	ofSetColor(0, 200, 255);
-	ofDrawBox(0, 0, 0, 0.08f, 0.04f, 0.08f);
+	ofDrawBox(0, 0, 0, 0.08f, 0.08f, 0.04f);
 
 	// Draw local axes on tracker
 	ofSetLineWidth(2);
@@ -145,5 +146,15 @@ void ofApp::keyPressed(int key) {
 
 	if (key == 'c' || key == 'C') {
 		trail.clear();
+	}
+
+	if (key == 'r' || key == 'R') {
+		if (tracker.isTracking()) {
+			// Set offset so current position maps to center of box (0, -1, 0)
+			glm::vec3 boxCenter(0.0f, -1.0f, 0.0f);
+			positionOffset = tracker.getPosition() - boxCenter;
+			trail.clear();
+			ofLogNotice("ofApp") << "Position reset - tracker centered in box";
+		}
 	}
 }
